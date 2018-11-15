@@ -1,0 +1,42 @@
+		CHANGES IN FLRDynState VERSION 0.2-9
+
+NEW FEATURES
+    o Changed setting the dimensionality of the arrays by having the number
+      of bins in the control rather than the binsize for the two species 
+      individually.
+ 
+		CHANGES IN FLRDynState VERSION 0.3-0
+
+NEW FEATURES
+    o Created accesor functions for classes.
+ 
+		CHANGES IN FLRDynState VERSION 0.3-1
+
+NEW FEATURES
+    o Changed order of dimensions of F arrays in cpp part in order to allow
+      more efficient code optimization resulted in 10% faster code.
+
+	 CHANGES IN FLRDynState VERSION 0.3-2
+
+NEW FEATURES
+    o Removed option of returning Istar array to R. This was hardly ever used, 
+      and only possible for very small models
+       
+  	 CHANGES IN FLRDynState VERSION 0.3-3
+
+NEW FEATURES
+    o Changed for loops in cpp part, improved readability of code
+
+  	 CHANGES IN FLRDynState VERSION 0.3-4
+
+NEW FEATURES
+    o Added Run Length Encoding for Istar array in cpp part, substantially
+      reducing memory footprint
+
+  	 CHANGES IN FLRDynState VERSION 0.3-4
+     
+NEW FEATURES
+    o Ensured maximum uplimits cannot exceed model arrays and stop when number
+      of options set by user exceed signed short 
+             
+ 

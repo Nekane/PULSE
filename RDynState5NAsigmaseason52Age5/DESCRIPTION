@@ -1,0 +1,13 @@
+Package: RDynState5NAsigmaseason52Age5
+Title: 5 spec 6 size Dynamic State Variable Model with sigma function
+        and 12 seasons
+Version: 1.02-02
+Author: Jan Jaap Poos
+Description: Package contains a 5 species Dynamic State Variable Model with sigma function 
+Maintainer: Nekane Alzorriz <Nekane.Alzorriz@gmail.com>
+License: GPL-2
+Depends: methods
+LazyLoad: Yes
+LazyData: Yes
+Packaged: 2017-10-31 14:28:15 UTC; nekane
+NeedsCompilation: yes

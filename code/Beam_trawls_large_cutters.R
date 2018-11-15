@@ -1,0 +1,261 @@
+##################################################################################
+# PULSE TRAWL PROJECT
+# Code for Bean large trawls and euro cutters independent scenarios
+# 8 October 2018
+# IJmuiden- IMARES
+##################################################################################
+
+options(width=240)
+library(RDynState5NAsigmaseason52Age5)
+library(ggplot2)
+library(reshape2)
+library(FLCore)
+library(plyr)
+library(scales)
+
+source("~/code/functions.R")
+
+#----------------------------------------------------------------------------------------
+# Rerun GAM prediction with updated catch efficiency parameters
+#----------------------------------------------------------------------------------------
+
+## PLAICE
+#ple_beam_large<- cpue_dsvm_input("ple",1)
+#ple_pulse_large<- cpue_dsvm_input("ple",1.28)
+#ple_beam_small<- cpue_dsvm_input("ple",(1*0.282))
+#ple_pulse_small<- cpue_dsvm_input("ple",(1.28*0.243))
+
+## SOLE
+#sol_beam_large<- cpue_dsvm_input("sol",1)
+#sol_pulse_large<- cpue_dsvm_input("sol",0.6)
+#sol_beam_small<- cpue_dsvm_input("sol",(1*0.282))
+#sol_pulse_small<- cpue_dsvm_input("sol",(0.6*0.243))
+
+## COD
+#cod_beam_large<- cpue_dsvm_input("cod",1)
+#cod_pulse_large<- cpue_dsvm_input("cod",0.6)
+#cod_beam_small<- cpue_dsvm_input("cod",(1*0.282))
+#cod_pulse_small<- cpue_dsvm_input("cod",(0.6*0.243))
+
+## SHRIMP
+#csh_beam_small<- cpue_dsvm_input("csh",1)
+
+#setwd("~/Dropbox/PULSE/Pulseproject/data/results")
+#files<- mget(ls())
+#for (i in 1:length(files)) write.csv(files[[i]], paste(names(files[i]), ".csv", sep = ""))
+
+
+#Load all .csv files
+#----------------------------------------------------------------------------------------
+setwd("~/data/results")
+temp <- list.files(pattern="*.csv")
+for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
+
+ 
+sp1<- sp2 <- sp3 <- sp4 <- sp5 <-    new("DynStateInput")
+
+# gample$family$getTheta() for Plaice in Jurgens GAMs is 1.195788
+# gamsol$family$getTheta() for Sole in Jurgens GAMs is 1.637352
+# gamcod$family$getTheta() for Cod in Jurgens GAMs is 0.8979249
+
+# ---------------------
+# ---------------------------------------------
+# BEAM TRAWLS: LONG DISTANCE fleet
+# --------------------------------------------
+# ---------------------
+# 
+sp1 <- cpue_dsvm_sp(sol_beam_large.csv, sp1, 1.637352)  #SOLE
+sp2 <- cpue_dsvm_sp(ple_beam_large.csv, sp2, 1.195788)  #PLAICE
+sp3 <- cpue_dsvm_sp(cod_beam_large.csv, sp3, 0.8979249) #COD
+
+catchMean(sp4) <- catchMean(sp5) <- array(0.01,dim=dim(catchMean(sp2)),dimnames=dimnames(catchMean(sp2)))
+catchSigma(sp4)<- catchSigma(sp5)<- array(0.0000001,dim=dim(catchMean(sp2)),dimnames=dimnames(catchMean(sp2)))
+
+# ---------------------
+# PRICES
+# ---------------------
+price <- read.csv("~/data/input/Visprijzen.csv")
+
+# SOLE = 5 cat 52 weeks3
+sp1Price <- price[price$Spec == "Sole" & price$Category != 0 & price$Week != 0,]
+sp1Price <- sp1Price[order(sp1Price$Week),]
+sp1Price <- array(sp1Price$Price, dim=c(5,52), dimnames=dimnames(catchMean(sp1))[-3])
+
+# Plaice 4 marketcat 1 discard with 0 marketvalue
+sp2Price <- price[price$Spec == "Plaice" & price$Category != 0 & price$Week != 0,]
+# create 5th cat with no marketvalue (discards)
+sp2Price <- rbind(sp2Price,data.frame(Week = 1:52, Category = 5, Price = 0, Spec = "Plaice"))
+sp2Price <- sp2Price[order(sp2Price$Week),]
+sp2Price <- array(sp2Price$Price, dim=c(5,52), dimnames=dimnames(catchMean(sp2))[-3])
+
+# Cod 5 marketcat with 52 weeks marketvalue
+sp3Price <- price[price$Spec == "Cod" & price$Category != 0 & price$Category != 6 & price$Week != 0,]      #delete cat 0 and 6 and no week 0
+sp3Price <- sp3Price[order(sp3Price$Week),]
+sp3Price <- array(sp3Price$Price, dim=c(5,52), dimnames=dimnames(catchMean(sp3))[-3])
+
+sp4Price <- sp5Price <- array(c(0), dim=c(5,52), dimnames=dimnames(catchMean(sp1))[-3])
+
+#-------------------------------------------------------------------------------------
+# EFFORT from the SOUTH home port; beam trawlers 11 Nm h-1 and 88 mean fishing days                                                      
+#-------------------------------------------------------------------------------------
+
+#effort  <- array(c(14,16,14,14,15,17,15,15,18),dim=9,2)       # URK kwart van een dag, so total effort divided by 4!
+
+effort <- array(c(effort_dsvm_input(4.2,52,11,89.5,"south")[c(1:14,16),8]), dim=c(15,52), dimnames=list(option=dimnames(catchMean(sp1))[[3]],season=as.character(dimnames(catchMean(sp1))[[2]])))
+
+#-------------------------------------------------------------------------------------
+# Make contol and execute calculations BEAM TRAWLS with 1600 tons quota
+#-------------------------------------------------------------------------------------
+# control <- DynState.control(Increments=30, PlaiceUplimit=1600000,PlaiceDiscardSteps=1, SoleDiscardSteps=0,CodDiscardSteps=0, 
+#                             EffortUplimit=NA,Handling= 0.24,CrewShare = 0.33,GearCost=87,VarCost= 0.05,EffortPrice=600,
+#                             FinePlaice=320,ChoiceDist=1,SimNumber=1000, NumThreads=20)
+
+area<- c(10:15)
+time<- 1:52
+sp1@catchMean <- sp1@catchMean[,time,area]
+sp1@catchSigma<- sp1@catchSigma[,time,area]
+sp2@catchMean <- sp2@catchMean[,time,area]
+sp2@catchSigma<- sp2@catchSigma[,time,area]
+sp3@catchMean <- sp3@catchMean[,time,area]
+sp3@catchSigma<- sp3@catchSigma[,time,area]
+sp4@catchMean <- sp4@catchMean[,time,area]
+sp4@catchSigma<- sp4@catchSigma[,time,area]
+sp5@catchMean <- sp5@catchMean[,time,area]
+sp5@catchSigma<- sp5@catchSigma[,time,area]
+
+sp1Price<- sp1Price[,time]
+sp2Price<- sp2Price[,time]
+sp3Price<- sp3Price[,time]
+sp4Price<- sp4Price[,time]
+sp5Price<- sp5Price[,time]
+
+effort<- effort[area, time]
+
+control     <- DynState.control(spp1LndQuota= 160000,  spp2LndQuota=1000000, spp1LndQuotaFine= 320, spp2LndQuotaFine= 3e6, fuelUse = 1, fuelPrice = 1600, landingCosts= 0.24,gearMaintenance= 87, addNoFishing= TRUE, increments= 20, spp1DiscardSteps= 0, spp2DiscardSteps= 0, sigma= 1, simNumber= 1000 , numThreads= 40, verbose=1)
+ 
+
+BS160 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
+save.image("~/modelresults/Beam_large_B160_south.RData")
+
+control@spp1LndQuota <- as.numeric(120000)
+BS120 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
+save.image("~/modelresults/Beam_large_B120_south.RData")
+
+control@spp1LndQuota <- as.numeric(80000)
+BS80 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
+save.image("~/modelresults/Beam_large_B80_south.RData")
+
+save(list=c("BS160","BS120","BS80"), file="~/modelresults/Beam_large_south_B160_80.RData")
+
+#-------------------------------------------------------------------------------------
+# EFFORT from the NORTH home port; beam trawlers 11 Nm h-1 and 88 mean fishing days                                             
+#-------------------------------------------------------------------------------------
+
+effort <- array(c(effort_dsvm_input(6.0,53.4,11,86.4,"north")[c(1:14,16),8]), dim=c(15,52), dimnames=list(option=dimnames(catchMean(sp1))[[3]],season=as.character(dimnames(catchMean(sp1))[[2]])))
+
+# Need to change fuelPrice; fuelconsumption based on relative towing speed while fishing
+control     <- DynState.control(spp1LndQuota= 160000,  spp2LndQuota=1000000, spp1LndQuotaFine= 320, spp2LndQuotaFine= 3e6, fuelUse = 1, fuelPrice = 1600, landingCosts= 0.24,gearMaintenance= 87, addNoFishing= TRUE, increments= 20, spp1DiscardSteps= 0, spp2DiscardSteps= 0, sigma= 1, simNumber= 1000 , numThreads= 40, verbose=1)
+
+BN160 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
+save.image("~/modelresults/Beam_large_B160_north.RData")
+
+control@spp1LndQuota <- as.numeric(120000)
+BN120 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
+save.image("~/modelresults/Beam_large_B120_north.RData")
+
+control@spp1LndQuota <- as.numeric(80000)
+BN80 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
+save.image("~/modelresults/Beam_large_B80_north.RData")
+
+save(list=c("BN160","BN120","BN80"), file="~/modelresults/Beam_large_north_B160_80.RData")
+
+# ---------------------
+# ---------------------------------------------
+# SMALL BEAM TRAWLS: EURO CUTTERS fleet
+# --------------------------------------------
+# here, we need to add the shrimp data
+# ---------------------
+
+sp1<- sp2 <- sp3 <- sp4 <- sp5 <-    new("DynStateInput")
+
+# gample$family$getTheta() for Plaice in Jurgens GAMs is 1.195788
+# gamsol$family$getTheta() for Sole in Jurgens GAMs is 1.637352
+# gamcod$family$getTheta() for Cod in Jurgens GAMs is 0.8979249
+
+sp1 <- cpue_dsvm_sp(sol_beam_small.csv, sp1, 1.637352)  #SOLE
+sp2 <- cpue_dsvm_sp(ple_beam_small.csv, sp2, 1.195788)  #PLAICE
+sp3 <- cpue_dsvm_sp(cod_beam_small.csv, sp3, 0.8979249) #COD
+sp4 <- cpue_dsvm_sp(csh_beam_small.csv, sp4, 1) #SHRIMP in Adriaans GAM family$getTheta() is 1
+
+#although shrimps have the same structure as others, there is only one size class (located in 1)
+
+catchMean(sp5) <- array(0.01,dim=dim(catchMean(sp2)),dimnames=dimnames(catchMean(sp2)))
+catchSigma(sp5)<- array(0.0000001,dim=dim(catchMean(sp2)),dimnames=dimnames(catchMean(sp2)))
+
+# ----------------------------------------------------------
+# SIZE DEPENDENT PRICING, following Zimmermann et al. (2011)
+# -----------------------------------------------------------
+# Shrimp 1 marketcat with 1 year marketvalue; strongly affected by the volume landed
+# we pick up the mean price from 2010-2015
+# add some variability dependant on the observed cpue
+
+price<- mean(subset(read.csv("priceshrimp.csv"), year %in% c(2010:2015))$value)
+slopeprice<- 0.01
+wts<- csh_beam_small.csv$data
+wts[wts<0]<-0
+
+pred      <- csh_beam_small.csv
+pred$data <- c(price + slopeprice*(((wts-mean(wts))/mean(wts))))
+pred <- pred[,c("sizeclass","data","area", "season")]
+names (pred) <- c("cat", "data", "option", "season" )
+pred <- tapply(pred[,"data"], list(cat=factor(x = pred[,"cat"], levels = unique(pred[,"cat"])), 
+                                     season=factor(x = pred[,"season"], levels = as.character(sort(unique(pred[,"season"])))), 
+                                     option=factor(x = pred[,"option"], levels = unique(pred[,"option"]))), sum)
+pred[2:5,,]<-0  # remove prices for other categories different than 1
+#select the area 2 where there is more variability in catches and therefore in prices
+sp4Price <- array(c(pred[,,2]), dim=c(5,52), dimnames=dimnames(catchMean(sp3))[-3])
+
+#-------------------------------------------------------------------------------------
+# EFFORT from the SOUTH home port; euro cutters 8.9 Nm h-1 and 88 mean fishing days                                               
+#-------------------------------------------------------------------------------------
+
+effort <- array(c(effort_dsvm_input(4.2,52,8.9,89.5,"south")[c(1:14,16),8]), dim=c(15,52), dimnames=list(option=dimnames(catchMean(sp1))[[3]],season=as.character(dimnames(catchMean(sp1))[[2]])))
+
+# Need to change fuelPrice; fuelconsumption based on relative towing speed while fishing
+control     <- DynState.control(spp1LndQuota= 160000,  spp2LndQuota=1000000, spp1LndQuotaFine= 320, spp2LndQuotaFine= 3e6, fuelUse = 1, fuelPrice = 1600, landingCosts= 0.24,gearMaintenance= 87, addNoFishing= TRUE, increments= 20, spp1DiscardSteps= 0, spp2DiscardSteps= 0, sigma= 1, simNumber= 1000 , numThreads= 40, verbose=1)
+ 
+CS160 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
+save.image("~/modelresults/Beam_small_C160_south.RData")
+
+control@spp1LndQuota <- as.numeric(120000)
+CS120 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
+save.image("~/modelresults/Beam_small_C120_south.RData")
+
+control@spp1LndQuota <- as.numeric(80000)
+CS80 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
+save.image("~/modelresults/Beam_small_C80_south.RData")
+
+
+
+save(list=c("CS160","CS120","CS80"), file="~/modelresults/Beam_small_south_C160_80.RData")
+
+#-------------------------------------------------------------------------------------
+# EFFORT from the NORTH home port; euro cutters 8.9 Nm h-1 and 88 mean fishing days                                                      
+#-------------------------------------------------------------------------------------
+
+effort <- array(c(effort_dsvm_input(6.0,53.4,8.9,86.4,"north")[c(1:14,16),8]), dim=c(15,52), dimnames=list(option=dimnames(catchMean(sp1))[[3]],season=as.character(dimnames(catchMean(sp1))[[2]])))
+
+CN160 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
+save.image("~/modelresults/Beam_small_B160_north.RData")
+
+control@spp1LndQuota <- as.numeric(120000)
+CN120 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
+save.image("~/modelresults/Beam_small_B120_north.RData")
+
+control@spp1LndQuota <- as.numeric(80000)
+CN80 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
+save.image("~/modelresults/Beam_small_B80_north.RData")
+
+save(list=c("CN160","CN120","CN80"), file="~/modelresults/Beam_small_north_C160_80.RData")
+
+
