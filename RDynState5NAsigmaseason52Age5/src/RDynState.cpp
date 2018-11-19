@@ -24,12 +24,13 @@ double          outofbounds_double;
 #define NOSIZES             5    // number of size classes used in the analysis
 #define MAXNOINC           20    // max number of increments
 #define MAXHORIZON         52    // number of seasons to fish (= time)
+#define MAXPATCH           16    // number of seasons to fish (= time)
 
 typedef unsigned UFINT;
 
 typedef float  (*FTYPE)[SPP2CAPACITY]; //matalloc(sizeof(float), (void *)0, 2, kSpp1Cap, kSpp2Cap); /* make pointer called FTYPE for FF0Star and FF1 arrays (that only has states and stores V for best choices) */
-typedef float  (*FCTYPE)[SPP2CAPACITY][3]; // (FCTYPE) matalloc(sizeof(float), (void*) 0,3, kSpp1Capacity, kSpp2Capacity,kNPatch) ;  /* make pointer called FCTYPE for FF0 array (that has states and patch, storing V for all patches/choices)_  */
-typedef float  (*ITYPE)[SPP1CAPACITY][SPP2CAPACITY][3]; //  matalloc(sizeof(float), (void *)0, 4, MAXHORIZON, kSpp1Capacity,kSpp2Capacity,kNPatch);  /* make pointer called ITYPE optimal choice array*/
+typedef float  (*FCTYPE)[SPP2CAPACITY][MAXPATCH]; // (FCTYPE) matalloc(sizeof(float), (void*) 0,3, kSpp1Capacity, kSpp2Capacity,kNPatch) ;  /* make pointer called FCTYPE for FF0 array (that has states and patch, storing V for all patches/choices)_  */
+typedef float  (*ITYPE)[SPP1CAPACITY][SPP2CAPACITY][MAXPATCH]; //  matalloc(sizeof(float), (void *)0, 4, MAXHORIZON, kSpp1Capacity,kSpp2Capacity,kNPatch);  /* make pointer called ITYPE optimal choice array*/
 typedef double (*PTYPE)[MAXHORIZON][NOSPEC][NOSIZES][MAXNOINC]; /* make pointer called PTYPE for information on statistical distribution prey*/
 typedef double (*ATYPE)[MAXHORIZON][NOSPEC][(NOSIZES*MAXNOINC) - 1];  /* make pointer called ATYPE for information on statistical distribution prey aggregated over sizes*/
 typedef float  (*PITYPE)[NOSPEC][NOSIZES];                         // matalloc(sizeof(float), (void *)0, 3, MAXHORIZON, NOSPEC, NOSIZES);; /* make pointer called PITYPE for price information*/
