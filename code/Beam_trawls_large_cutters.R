@@ -54,19 +54,15 @@ for (i in 1:length(temp)) assign(temp[i], read.csv(temp[i]))
  
 sp1<- sp2 <- sp3 <- sp4 <- sp5 <-    new("DynStateInput")
 
-# gample$family$getTheta() for Plaice in Jurgens GAMs is 1.195788
-# gamsol$family$getTheta() for Sole in Jurgens GAMs is 1.637352
-# gamcod$family$getTheta() for Cod in Jurgens GAMs is 0.8979249
-
 # ---------------------
 # ---------------------------------------------
 # BEAM TRAWLS: LONG DISTANCE fleet
 # --------------------------------------------
 # ---------------------
 # 
-sp1 <- cpue_dsvm_sp(sol_beam_large.csv, sp1, 1.637352)  #SOLE
-sp2 <- cpue_dsvm_sp(ple_beam_large.csv, sp2, 1.195788)  #PLAICE
-sp3 <- cpue_dsvm_sp(cod_beam_large.csv, sp3, 0.8979249) #COD
+sp1 <- cpue_dsvm_sp(sol_beam_large.csv, sp1, 1.637352)  #SOLE   # gamsol$family$getTheta() for Sole in Jurgens GAMs is 1.637352
+sp2 <- cpue_dsvm_sp(ple_beam_large.csv, sp2, 1.195788)  #PLAICE # gample$family$getTheta() for Plaice in Jurgens GAMs is 1.195788
+sp3 <- cpue_dsvm_sp(cod_beam_large.csv, sp3, 0.8979249) #COD    # gamcod$family$getTheta() for Cod in Jurgens GAMs is 0.8979249
 
 catchMean(sp4) <- catchMean(sp5) <- array(0.01,dim=dim(catchMean(sp2)),dimnames=dimnames(catchMean(sp2)))
 catchSigma(sp4)<- catchSigma(sp5)<- array(0.0000001,dim=dim(catchMean(sp2)),dimnames=dimnames(catchMean(sp2)))
@@ -104,44 +100,38 @@ sp4Price <- sp5Price <- array(c(0), dim=c(5,52), dimnames=dimnames(catchMean(sp1
 effort <- array(c(effort_dsvm_input(4.2,52,11,89.5,"south")[c(1:14,16),8]), dim=c(15,52), dimnames=list(option=dimnames(catchMean(sp1))[[3]],season=as.character(dimnames(catchMean(sp1))[[2]])))
 
 #-------------------------------------------------------------------------------------
+# Search for a good sigma value
+#-------------------------------------------------------------------------------------
+
+#To find the proper sigma, first I give enough quota to all species and search for a sigma value that allow fishers to go the best 4 or 5 patch options.
+#control     <- DynState.control(spp1LndQuota= 160e9,  spp2LndQuota=1000e9, spp1LndQuotaFine= 320, spp2LndQuotaFine= 3e6, fuelUse = 1, fuelPrice = 1600, landingCosts= 0.24,gearMaintenance= 87, addNoFishing= TRUE, increments= 20, spp1DiscardSteps= 0, spp2DiscardSteps= 0, sigma= 1.5e+4, simNumber= 1000 , numThreads= 40, verbose=1)
+
+#with sigma equals to    1e+03, probs are 1.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00 by area (1:16 and stay in port)
+#with sigma equals to    5e+03, probs are 0.96,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.02,0.00,0.02,0.00,0.00,0.00
+#with sigma equals to    1e+04, probs are 0.72,0.00,0.00,0.01,0.00,0.00,0.01,0.00,0.00,0.01,0.10,0.00,0.10,0.02,0.00,0.00 
+#with sigma equals to 1.25e+04, probs are 0.61,0.00,0.01,0.02,0.01,0.00,0.02,0.01,0.00,0.02,0.13,0.00,0.13,0.04,0.00,0.00,
+#with sigma equals to  1.5e+04, probs are 0.51,0.01,0.02,0.03,0.01,0.01,0.03,0.02,0.00,0.03,0.14,0.00,0.14,0.05,0.00,0.00 
+#with sigma equals to    2e+04, probs are 0.38,0.01,0.03,0.05,0.02,0.02,0.04,0.03,0.00,0.05,0.14,0.00,0.15,0.07,0.00,0.00 
+#with sigma equals to  2.5e+04, probs are 0.30,0.02,0.04,0.06,0.03,0.03,0.05,0.04,0.00,0.05,0.14,0.01,0.14,0.08,0.00,0.01
+#with sigma equals to    1e+05, probs are 0.10,0.05,0.06,0.07,0.06,0.06,0.07,0.06,0.04,0.07,0.09,0.04,0.09,0.07,0.04,0.04
+
+
+#-------------------------------------------------------------------------------------
 # Make contol and execute calculations BEAM TRAWLS with 1600 tons quota
 #-------------------------------------------------------------------------------------
-# control <- DynState.control(Increments=30, PlaiceUplimit=1600000,PlaiceDiscardSteps=1, SoleDiscardSteps=0,CodDiscardSteps=0, 
-#                             EffortUplimit=NA,Handling= 0.24,CrewShare = 0.33,GearCost=87,VarCost= 0.05,EffortPrice=600,
-#                             FinePlaice=320,ChoiceDist=1,SimNumber=1000, NumThreads=20)
 
-area<- c(10:15)
-time<- 1:52
-sp1@catchMean <- sp1@catchMean[,time,area]
-sp1@catchSigma<- sp1@catchSigma[,time,area]
-sp2@catchMean <- sp2@catchMean[,time,area]
-sp2@catchSigma<- sp2@catchSigma[,time,area]
-sp3@catchMean <- sp3@catchMean[,time,area]
-sp3@catchSigma<- sp3@catchSigma[,time,area]
-sp4@catchMean <- sp4@catchMean[,time,area]
-sp4@catchSigma<- sp4@catchSigma[,time,area]
-sp5@catchMean <- sp5@catchMean[,time,area]
-sp5@catchSigma<- sp5@catchSigma[,time,area]
+control     <- DynState.control(spp1LndQuota= 160e3,  spp2LndQuota=100e9, spp1LndQuotaFine= 320, spp2LndQuotaFine= 3e6, fuelUse = 1, fuelPrice = 1600, landingCosts= 0.24,gearMaintenance= 87, addNoFishing= TRUE, increments= 20, spp1DiscardSteps= 0, spp2DiscardSteps= 0, sigma= 1.25e+04, simNumber= 1000 , numThreads= 40, verbose=1)
 
-sp1Price<- sp1Price[,time]
-sp2Price<- sp2Price[,time]
-sp3Price<- sp3Price[,time]
-sp4Price<- sp4Price[,time]
-sp5Price<- sp5Price[,time]
 
-effort<- effort[area, time]
-
-control     <- DynState.control(spp1LndQuota= 160000,  spp2LndQuota=1000000, spp1LndQuotaFine= 320, spp2LndQuotaFine= 3e6, fuelUse = 1, fuelPrice = 1600, landingCosts= 0.24,gearMaintenance= 87, addNoFishing= TRUE, increments= 20, spp1DiscardSteps= 0, spp2DiscardSteps= 0, sigma= 1, simNumber= 1000 , numThreads= 40, verbose=1)
- 
 
 BS160 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
 save.image("~/modelresults/Beam_large_B160_south.RData")
 
-control@spp1LndQuota <- as.numeric(120000)
+control@spp1LndQuota <- as.numeric(120e3)
 BS120 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
 save.image("~/modelresults/Beam_large_B120_south.RData")
 
-control@spp1LndQuota <- as.numeric(80000)
+control@spp1LndQuota <- as.numeric(80e3)
 BS80 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
 save.image("~/modelresults/Beam_large_B80_south.RData")
 
@@ -154,16 +144,16 @@ save(list=c("BS160","BS120","BS80"), file="~/modelresults/Beam_large_south_B160_
 effort <- array(c(effort_dsvm_input(6.0,53.4,11,86.4,"north")[c(1:14,16),8]), dim=c(15,52), dimnames=list(option=dimnames(catchMean(sp1))[[3]],season=as.character(dimnames(catchMean(sp1))[[2]])))
 
 # Need to change fuelPrice; fuelconsumption based on relative towing speed while fishing
-control     <- DynState.control(spp1LndQuota= 160000,  spp2LndQuota=1000000, spp1LndQuotaFine= 320, spp2LndQuotaFine= 3e6, fuelUse = 1, fuelPrice = 1600, landingCosts= 0.24,gearMaintenance= 87, addNoFishing= TRUE, increments= 20, spp1DiscardSteps= 0, spp2DiscardSteps= 0, sigma= 1, simNumber= 1000 , numThreads= 40, verbose=1)
+control     <- DynState.control(spp1LndQuota= 160e3,  spp2LndQuota=100e9, spp1LndQuotaFine= 320, spp2LndQuotaFine= 3e6, fuelUse = 1, fuelPrice = 1600, landingCosts= 0.24,gearMaintenance= 87, addNoFishing= TRUE, increments= 20, spp1DiscardSteps= 0, spp2DiscardSteps= 0, sigma= 1, simNumber= 1000 , numThreads= 40, verbose=1)
 
 BN160 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
 save.image("~/modelresults/Beam_large_B160_north.RData")
 
-control@spp1LndQuota <- as.numeric(120000)
+control@spp1LndQuota <- as.numeric(120e3)
 BN120 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
 save.image("~/modelresults/Beam_large_B120_north.RData")
 
-control@spp1LndQuota <- as.numeric(80000)
+control@spp1LndQuota <- as.numeric(80e3)
 BN80 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
 save.image("~/modelresults/Beam_large_B80_north.RData")
 
@@ -199,7 +189,7 @@ catchSigma(sp5)<- array(0.0000001,dim=dim(catchMean(sp2)),dimnames=dimnames(catc
 # we pick up the mean price from 2010-2015
 # add some variability dependant on the observed cpue
 
-price<- mean(subset(read.csv("priceshrimp.csv"), year %in% c(2010:2015))$value)
+price<- mean(subset(read.csv("~/data/input/priceshrimp.csv"), year %in% c(2010:2015))$value)
 slopeprice<- 0.01
 wts<- csh_beam_small.csv$data
 wts[wts<0]<-0
@@ -222,16 +212,16 @@ sp4Price <- array(c(pred[,,2]), dim=c(5,52), dimnames=dimnames(catchMean(sp3))[-
 effort <- array(c(effort_dsvm_input(4.2,52,8.9,89.5,"south")[c(1:14,16),8]), dim=c(15,52), dimnames=list(option=dimnames(catchMean(sp1))[[3]],season=as.character(dimnames(catchMean(sp1))[[2]])))
 
 # Need to change fuelPrice; fuelconsumption based on relative towing speed while fishing
-control     <- DynState.control(spp1LndQuota= 160000,  spp2LndQuota=1000000, spp1LndQuotaFine= 320, spp2LndQuotaFine= 3e6, fuelUse = 1, fuelPrice = 1600, landingCosts= 0.24,gearMaintenance= 87, addNoFishing= TRUE, increments= 20, spp1DiscardSteps= 0, spp2DiscardSteps= 0, sigma= 1, simNumber= 1000 , numThreads= 40, verbose=1)
+control     <- DynState.control(spp1LndQuota= 160e3,  spp2LndQuota=100e9, spp1LndQuotaFine= 320, spp2LndQuotaFine= 3e6, fuelUse = 1, fuelPrice = 1600, landingCosts= 0.24,gearMaintenance= 87, addNoFishing= TRUE, increments= 20, spp1DiscardSteps= 0, spp2DiscardSteps= 0, sigma= 1, simNumber= 1000 , numThreads= 40, verbose=1)
  
 CS160 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
 save.image("~/modelresults/Beam_small_C160_south.RData")
 
-control@spp1LndQuota <- as.numeric(120000)
+control@spp1LndQuota <- as.numeric(120e3)
 CS120 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
 save.image("~/modelresults/Beam_small_C120_south.RData")
 
-control@spp1LndQuota <- as.numeric(80000)
+control@spp1LndQuota <- as.numeric(80e3)
 CS80 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
 save.image("~/modelresults/Beam_small_C80_south.RData")
 
@@ -245,17 +235,44 @@ save(list=c("CS160","CS120","CS80"), file="~/modelresults/Beam_small_south_C160_
 
 effort <- array(c(effort_dsvm_input(6.0,53.4,8.9,86.4,"north")[c(1:14,16),8]), dim=c(15,52), dimnames=list(option=dimnames(catchMean(sp1))[[3]],season=as.character(dimnames(catchMean(sp1))[[2]])))
 
+control@spp1LndQuota <- as.numeric(160e3)
 CN160 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
 save.image("~/modelresults/Beam_small_B160_north.RData")
 
-control@spp1LndQuota <- as.numeric(120000)
+control@spp1LndQuota <- as.numeric(120e3)
 CN120 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
 save.image("~/modelresults/Beam_small_B120_north.RData")
 
-control@spp1LndQuota <- as.numeric(80000)
+control@spp1LndQuota <- as.numeric(80e3)
 CN80 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
 save.image("~/modelresults/Beam_small_B80_north.RData")
 
 save(list=c("CN160","CN120","CN80"), file="~/modelresults/Beam_small_north_C160_80.RData")
 
+
+
+# control <- DynState.control(Increments=30, PlaiceUplimit=1600000,PlaiceDiscardSteps=1, SoleDiscardSteps=0,CodDiscardSteps=0, 
+#                             EffortUplimit=NA,Handling= 0.24,CrewShare = 0.33,GearCost=87,VarCost= 0.05,EffortPrice=600,
+#                             FinePlaice=320,ChoiceDist=1,SimNumber=1000, NumThreads=20)
+
+#area<- c(10:15)
+#time<- 1:52
+#sp1@catchMean <- sp1@catchMean[,time,area]
+#sp1@catchSigma<- sp1@catchSigma[,time,area]
+#sp2@catchMean <- sp2@catchMean[,time,area]
+#sp2@catchSigma<- sp2@catchSigma[,time,area]
+#sp3@catchMean <- sp3@catchMean[,time,area]
+#sp3@catchSigma<- sp3@catchSigma[,time,area]
+#sp4@catchMean <- sp4@catchMean[,time,area]
+#sp4@catchSigma<- sp4@catchSigma[,time,area]
+#sp5@catchMean <- sp5@catchMean[,time,area]
+#sp5@catchSigma<- sp5@catchSigma[,time,area]
+
+#sp1Price<- sp1Price[,time]
+#sp2Price<- sp2Price[,time]
+#sp3Price<- sp3Price[,time]
+#sp4Price<- sp4Price[,time]
+#sp5Price<- sp5Price[,time]
+
+#effort<- effort[area, time]160e3 160000
 

@@ -592,7 +592,7 @@ Rprintf("Start of DynStateF\n");
   Rprintf("Generated aggregated distribution functions \n"); R_FlushConsole();
   
   if (verbose == 1){
-    Rprintf(" landings probs for size 1-6, choice1 (0), time 0, spec 0\n");
+    Rprintf(" landings probs for size 1-5, choice1 (0), time 0, spec 0\n");
     for (int inc = 0; inc < noInc; inc++){
       Rprintf("%22.22f ",	theLndParms[0][0][0][0][inc]);
       Rprintf("%22.22f ",	theLndParms[0][0][0][1][inc]);
@@ -601,7 +601,7 @@ Rprintf("Start of DynStateF\n");
       Rprintf("%22.22f ",	theLndParms[0][0][0][4][inc]);
       Rprintf("\n");
     }
-    Rprintf(" landings probs for size 1-6, choice2 (1), time 0, spec 0\n");
+    Rprintf(" landings probs for size 1-5, choice2 (1), time 0, spec 0\n");
     for (int inc = 0; inc < noInc; inc++){
       Rprintf("%22.22f ",	theLndParms[1][0][0][0][inc]);
       Rprintf("%22.22f ",	theLndParms[1][0][0][1][inc]);
@@ -786,9 +786,9 @@ Rprintf("Start of DynStateF\n");
   }
   if (verbose == 1){
      Rprintf("\n",Lndspp1);
-    for (Lndspp1 = 0; Lndspp1 < kSpp1Capacity; Lndspp1 +=15) {
+    for (Lndspp1 = 0; Lndspp1 < kSpp1Capacity; Lndspp1 +=200) {
       Rprintf("%d ",Lndspp1);
-      for (Lndspp2 = 0; Lndspp2 < kSpp2Capacity; Lndspp2 +=50) {
+      for (Lndspp2 = 0; Lndspp2 < kSpp2Capacity; Lndspp2 +=200) {
 	Rprintf("%4.f ",theFF1[Lndspp1][Lndspp2]);
       }
       Rprintf("\n"); R_FlushConsole();      
@@ -815,7 +815,7 @@ Rprintf("Start of DynStateF\n");
     }
     
     if (verbose == 1){
-      Rprintf("\n"); R_FlushConsole();        
+      Rprintf("\n");Rprintf("gain,cost.netrev");Rprintf("\n"); R_FlushConsole();        
       for ( i = 0; i < kNPatch; i++){     
         Rprintf("%2.2f ",theShortTermGains[i]);
         Rprintf("%2.2f ",theShortTermCosts[i]);
@@ -842,9 +842,9 @@ Rprintf("Start of DynStateF\n");
   
     if (verbose == 1){
       Rprintf("\n FF0 \n"); R_FlushConsole();          
-      for (Lndspp1 = 0; Lndspp1 < maxspp[t]; Lndspp1 +=15) {
+      for (Lndspp1 = 0; Lndspp1 < maxspp[t]; Lndspp1 +=200) {
 	Rprintf("%d ",Lndspp1); 
-	for (Lndspp2 = 0; Lndspp2 < maxspp[t]; Lndspp2 +=50) {
+	for (Lndspp2 = 0; Lndspp2 < maxspp[t]; Lndspp2 +=200) {
 	  for (int ppp = 0; ppp < kNPatch; ppp++) {
 	    Rprintf("%2.2f,", theFF0[Lndspp1][Lndspp2][ppp]);
 	  }
@@ -870,9 +870,9 @@ Rprintf("Start of DynStateF\n");
     //  Rprintf(" Finished numerator "); R_FlushConsole();
     if (verbose == 1){
       Rprintf("\n FF0star \n"); R_FlushConsole();   
-      for (Lndspp1 = 0; Lndspp1 < maxspp[t]; Lndspp1 += 15) {
+      for (Lndspp1 = 0; Lndspp1 < maxspp[t]; Lndspp1 += 200) {
 	Rprintf("%d ",Lndspp1); 
-	for (Lndspp2 = 0; Lndspp2 < maxspp[t]; Lndspp2 +=50) {
+	for (Lndspp2 = 0; Lndspp2 < maxspp[t]; Lndspp2 +=200) {
 	  Rprintf("%2.2f ",theFF0Star[Lndspp1][Lndspp2]); 
 	}
 	Rprintf("\n "); R_FlushConsole();
@@ -904,9 +904,9 @@ Rprintf("Start of DynStateF\n");
 
     if (verbose == 1){
       Rprintf("\n probabilities \n"); R_FlushConsole();    
-      for (Lndspp1 = 0; Lndspp1 < maxspp[t]; Lndspp1 += 15) {
+      for (Lndspp1 = 0; Lndspp1 < maxspp[t]; Lndspp1 += 200) {
 	Rprintf("%d ",Lndspp1); 
-	for (Lndspp2 = 0; Lndspp2 < maxspp[t]; Lndspp2 +=50) {
+	for (Lndspp2 = 0; Lndspp2 < maxspp[t]; Lndspp2 +=200) {
 	  for (int ppp = 0; ppp < kNPatch; ppp++) {
 	    Rprintf("%.2f,",theProbChoice[t][Lndspp1][Lndspp2][ppp]); 
 	  }
