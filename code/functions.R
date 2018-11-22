@@ -22,7 +22,7 @@ effort_dsvm_input <- function(lon, lat, steamspeed, fishingtime, port){
 # need the mean steam speed and fishing time of the studied fleet
 
 # from home port
-dist        <- read.csv("~/Dropbox/PULSE/Pulseproject/data/input/coord_distance.csv")
+dist        <- read.csv("~/data/input/coord_distance.csv")
 dist        <- dist[dist$port==as.character(port),]
 dist        <- dist[,c(3,2)]
 area        <- dist[1:16,]
@@ -85,7 +85,7 @@ cpue_dsvm_input <- function(sp, catchefficiency){
   
   # COD
   if (sp=="cod"){
-    load("~/Dropbox/PULSE/Pulseproject/data/input/GAMdata/gamcod_final.rdata")
+    load("~/data/input/GAMdata/gamcod_final.rdata")
     gamdata <- gamcod
     # Use Age-Length_key mean weight per month (data-file for points where no month-area match is observed)
     Key     <- read.csv("~/Dropbox/PULSE/Pulseproject/data/input/snij_Codb.csv")
@@ -93,10 +93,10 @@ cpue_dsvm_input <- function(sp, catchefficiency){
   }
   # PLAICE
   if (sp=="ple"){
-    load("~/Dropbox/PULSE/Pulseproject/data/input/GAMdata/gample_final.rdata")
+    load("~/data/input/GAMdata/gample_final.rdata")
     gamdata <- gample
-    Key     <- read.csv("~/Dropbox/PULSE/Pulseproject/data/input/snij_Pleb.csv")
-    disc    <- read.csv("~/Dropbox/PULSE/Pulseproject/data/input/discards_in_weight.csv")
+    Key     <- read.csv("~/data/input/snij_Pleb.csv")
+    disc    <- read.csv("~/data/input/discards_in_weight.csv")
     disc$X  <- NULL
     colnames(disc)[3]<- "data"
     disc    <- disc[disc$week!= 53,] # remove plaice box areas + area 1...JUST REMOVE WEEK 53
@@ -104,9 +104,9 @@ cpue_dsvm_input <- function(sp, catchefficiency){
   }
   # SOLE
   if (sp=="sol"){
-    load("~/Dropbox/PULSE/Pulseproject/data/input/GAMdata/gamsol_final.rdata")
+    load("~/data/input/GAMdata/gamsol_final.rdata")
     gamdata <- gamsol
-    Key     <- read.csv("~/Dropbox/PULSE/Pulseproject/data/input/snij_Solb.csv")
+    Key     <- read.csv("~/data/input/snij_Solb.csv")
     stockcorrection <- 1.23 # sole conversion factor from 70s to 2000
   }
   
@@ -165,7 +165,7 @@ cpue_dsvm_input <- function(sp, catchefficiency){
   }
   
   if(sp=="csh"){
-    gamdata <- read.csv("~/Dropbox/PULSE/Pulseproject/data/input/GAMdata/cpue_csh.csv")
+    gamdata <- read.csv("~/data/input/GAMdata/cpue_csh.csv")
     gamdata$sizeclass<- 1
     names(gamdata)[2]<- "season"
     names(gamdata)[5]<- "data"
@@ -201,4 +201,44 @@ cpue_dsvm_sp <- function(data, sp, theta){
     
     return(sp)
     
+}
+
+#---------------------------------------------------------------------------------------------------------
+# Extract results to a data frame
+#---------------------------------------------------------------------------------------------------------
+
+extract_dsvm_res <- function(z, control, ages, season){
+  #detach("package:FLCore", unload=TRUE)
+  simNumber <-control@simNumber
+  sp        <- c("sp1","sp2","sp3","sp4","sp5")
+  dsvm_res             <- as.data.frame(rbind(as.matrix(spp1Landings(sim(z))),
+                                              as.matrix(spp2Landings(sim(z))),
+                                              as.matrix(spp3Landings(sim(z))),
+                                              as.matrix(spp4Landings(sim(z))),
+                                              as.matrix(spp5Landings(sim(z)))))
+  names(dsvm_res)      <- "landings.wt"
+  dsvm_res$discards.wt <- c(rbind(as.matrix(spp1Discards(sim(z))),
+                                  as.matrix(spp2Discards(sim(z))),
+                                  as.matrix(spp3Discards(sim(z))),
+                                  as.matrix(spp4Discards(sim(z))),
+                                  as.matrix(spp5Discards(sim(z)))))
+  dsvm_res$catch.wt    <- dsvm_res$ landings + dsvm_res$discards
+  dsvm_res$effort      <- rep(rep(as.matrix(effort(sim(z))),each=length(ages)),length(sp))
+  dsvm_res$option      <- rep(rep(as.matrix(choice(sim(z))),each=length(ages)),length(sp))
+  dsvm_res$spp         <- as.factor(c(rep(sp, each=(simNumber*length(ages)*length(season)))))
+  dsvm_res$cat         <- ages
+  dsvm_res$season      <- c(rep(season, each=simNumber*length(ages)))
+  dsvm_res$vessel      <- rep(1:simNumber,each=length(ages))
+  dsvm_res$option[is.na(dsvm_res$option)] <- "Stay in port"
+  dsvm_res[c(1:4)]     <- lapply(dsvm_res[c(1:4)], function(x) as.numeric(as.character(x)))
+  dsvm_res[c(5:9)]     <- lapply(dsvm_res[c(5:9)], function(x) as.factor(x))
+  is.num               <- sapply(dsvm_res, is.numeric)
+  dsvm_res[is.num]     <- lapply(dsvm_res[is.num], round, 6)
+  # # Just focus on sp1 and sp2
+  # dsvm_res             <- subset(dsvm_res,(spp %in% c("sp1", "sp2")))
+  # trip                 <- count(dsvm_res,c("spp","cat","season","option"))
+  # names(trip)[5]       <- "trip"
+  # dsvm_res             <- aggregate(cbind(landings.wt, discards.wt, catch.wt, effort)~ spp+cat+season+option, FUN=sum, data=dsvm_res)
+  # dsvm_res             <- merge(dsvm_res, trip, by=c("spp","cat", "season","option"),all.x=TRUE)
+  return(dsvm_res)
 }
