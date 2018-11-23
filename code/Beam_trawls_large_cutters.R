@@ -77,9 +77,9 @@ sp1Price <- price[price$Spec == "Sole" & price$Category != 0 & price$Week != 0,]
 sp1Price <- sp1Price[order(sp1Price$Week),]
 sp1Price <- array(sp1Price$Price, dim=c(5,52), dimnames=dimnames(catchMean(sp1))[-3])
 
-# Plaice 4 marketcat 1 discard with 0 marketvalue
+# Plaice 4 marketcat 1 discard with 0.22 marketvalue (since discarding is not allowed, this fraction goes for fishmeal)
 sp2Price <- price[price$Spec == "Plaice" & price$Category != 0 & price$Week != 0,]
-# create 5th cat with no marketvalue (discards)
+# create 5th cat with 0.22 marketvalue (discards)
 sp2Price <- rbind(sp2Price,data.frame(Week = 1:52, Category = 5, Price = 0.22, Spec = "Plaice"))
 sp2Price <- sp2Price[order(sp2Price$Week),]
 sp2Price <- array(sp2Price$Price, dim=c(5,52), dimnames=dimnames(catchMean(sp2))[-3])
@@ -94,8 +94,6 @@ sp4Price <- sp5Price <- array(c(0), dim=c(5,52), dimnames=dimnames(catchMean(sp1
 #-------------------------------------------------------------------------------------
 # EFFORT from the SOUTH home port; beam trawlers 11 Nm h-1 and 88 mean fishing days                                                      
 #-------------------------------------------------------------------------------------
-
-#effort  <- array(c(14,16,14,14,15,17,15,15,18),dim=9,2)       # URK kwart van een dag, so total effort divided by 4!
 
 effort <- array(c(effort_dsvm_input(4.2,52,11,89.5,"south")[c(1:14,16),8]), dim=c(15,52), dimnames=list(option=dimnames(catchMean(sp1))[[3]],season=as.character(dimnames(catchMean(sp1))[[2]])))
 
@@ -120,7 +118,7 @@ effort <- array(c(effort_dsvm_input(4.2,52,11,89.5,"south")[c(1:14,16),8]), dim=
 # Make contol and execute calculations BEAM TRAWLS with 1600 tons quota
 #-------------------------------------------------------------------------------------
 
-control     <- DynState.control(spp1LndQuota= 160e3,  spp2LndQuota=100e9, spp1LndQuotaFine= 320, spp2LndQuotaFine= 3e6, fuelUse = 1, fuelPrice = 1600, landingCosts= 0.24,gearMaintenance= 87, addNoFishing= TRUE, increments= 20, spp1DiscardSteps= 0, spp2DiscardSteps= 0, sigma= 1.5e+04, simNumber= 1000 , numThreads= 40, verbose=1)
+control     <- DynState.control(spp1LndQuota= 160e3,  spp2LndQuota=100e9, spp1LndQuotaFine= 320, spp2LndQuotaFine= 3e6, fuelUse = 1, fuelPrice = 580, landingCosts= 0.24,gearMaintenance= 87, addNoFishing= TRUE, increments= 20, spp1DiscardSteps= 0, spp2DiscardSteps= 0, sigma= 1.5e+04, simNumber= 1000 , numThreads= 40, verbose=1)
 
 
 
@@ -144,7 +142,7 @@ save(list=c("BS160","BS120","BS80"), file="~/modelresults/Beam_large_south_B160_
 effort <- array(c(effort_dsvm_input(6.0,53.4,11,86.4,"north")[c(1:14,16),8]), dim=c(15,52), dimnames=list(option=dimnames(catchMean(sp1))[[3]],season=as.character(dimnames(catchMean(sp1))[[2]])))
 
 # Need to change fuelPrice; fuelconsumption based on relative towing speed while fishing
-control     <- DynState.control(spp1LndQuota= 160e3,  spp2LndQuota=100e9, spp1LndQuotaFine= 320, spp2LndQuotaFine= 3e6, fuelUse = 1, fuelPrice = 1600, landingCosts= 0.24,gearMaintenance= 87, addNoFishing= TRUE, increments= 20, spp1DiscardSteps= 0, spp2DiscardSteps= 0, sigma= 1.5e+04, simNumber= 1000 , numThreads= 40, verbose=1)
+control     <- DynState.control(spp1LndQuota= 160e3,  spp2LndQuota=100e9, spp1LndQuotaFine= 320, spp2LndQuotaFine= 3e6, fuelUse = 1, fuelPrice = 580, landingCosts= 0.24,gearMaintenance= 87, addNoFishing= TRUE, increments= 20, spp1DiscardSteps= 0, spp2DiscardSteps= 0, sigma= 1.5e+04, simNumber= 1000 , numThreads= 40, verbose=1)
 
 BN160 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
 save.image("~/modelresults/Beam_large_B160_north_sigma_1_5e4.RData")
@@ -212,7 +210,7 @@ sp4Price <- array(c(pred[,,2]), dim=c(5,52), dimnames=dimnames(catchMean(sp3))[-
 effort <- array(c(effort_dsvm_input(4.2,52,8.9,89.5,"south")[c(1:14,16),8]), dim=c(15,52), dimnames=list(option=dimnames(catchMean(sp1))[[3]],season=as.character(dimnames(catchMean(sp1))[[2]])))
 
 # Need to change fuelPrice; fuelconsumption based on relative towing speed while fishing
-control     <- DynState.control(spp1LndQuota= 160e3,  spp2LndQuota=100e9, spp1LndQuotaFine= 320, spp2LndQuotaFine= 3e6, fuelUse = 1, fuelPrice = 1600, landingCosts= 0.24,gearMaintenance= 87, addNoFishing= TRUE, increments= 20, spp1DiscardSteps= 0, spp2DiscardSteps= 0, sigma= 1.5e+04, simNumber= 1000 , numThreads= 40, verbose=1)
+control     <- DynState.control(spp1LndQuota= 160e3,  spp2LndQuota=100e9, spp1LndQuotaFine= 320, spp2LndQuotaFine= 3e6, fuelUse = 1, fuelPrice = 162, landingCosts= 0.24,gearMaintenance= 87, addNoFishing= TRUE, increments= 20, spp1DiscardSteps= 0, spp2DiscardSteps= 0, sigma= 1.5e+04, simNumber= 1000 , numThreads= 40, verbose=1)
  
 CS160 <- DynState(sp1, sp2, sp3, sp4, sp5, sp1Price, sp2Price, sp3Price, sp4Price, sp5Price, effort, control)
 save.image("~/modelresults/Beam_small_C160_south_sigma_1_5e4.RData")
